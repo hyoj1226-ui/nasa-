@@ -53,7 +53,45 @@ with tab1:
     )
 
     # 주요 탐사선 착륙 위치 마커 추가
-    if selected_body == "화성 (Mars)":
+    if selected_body =# ---------------------------------------------------------
+# TAB 1: OpenPlanetary 타일 연동 행성 지형 지도
+# ---------------------------------------------------------
+with tab1:
+    st.header("화성 및 달 인터랙티브 지형 지도")
+    st.write("OpenPlanetaryMap의 Web Mercator 타일을 적용하여 화성과 달의 지형을 탐사합니다.")
+    
+    col_select, _ = st.columns([1, 2])
+    with col_select:
+        selected_body = st.selectbox("탐사할 천체를 선택하세요", ["화성 (Mars - Viking Color)", "화성 (Mars - MOLA Elevation)", "달 (Moon)"])
+    
+    # Folium과 100% 호환되는 OpenPlanetary 타일 URL
+    if "Viking" in selected_body:
+        tile_url = "https://s3-eu-west-1.amazonaws.com/whereonmars.cartodb.net/celestia_mars-viking-mosaics/{z}/{x}/{y}.png"
+        attr = "OpenPlanetaryMap / NASA Viking Mosaic"
+        init_location = [0, 0]
+        zoom_start = 2
+    elif "MOLA" in selected_body:
+        tile_url = "https://s3-eu-west-1.amazonaws.com/whereonmars.cartodb.net/mola-color/{z}/{x}/{y}.png"
+        attr = "OpenPlanetaryMap / NASA MOLA Elevation"
+        init_location = [0, 0]
+        zoom_start = 2
+    else:
+        tile_url = "https://s3-eu-west-1.amazonaws.com/whereonmars.cartodb.net/moon-color/{z}/{x}/{y}.png"
+        attr = "OpenPlanetaryMap / USGS Moon Map"
+        init_location = [0, 0]
+        zoom_start = 2
+
+    # Folium 지도 생성 (max_zoom=5 로 제한하여 미지원 타일 요청 방지)
+    m = folium.Map(
+        location=init_location,
+        zoom_start=zoom_start,
+        max_zoom=5,
+        tiles=tile_url,
+        attr=attr
+    )
+
+    # 주요 탐사선 착륙 위치 마커
+    if "Mars" in selected_body:
         folium.Marker(
             [4.5, 135.6],
             popup="InSight 착륙지 (Elysium Planitia)",
@@ -74,7 +112,6 @@ with tab1:
         ).add_to(m)
 
     st_folium(m, width="100%", height=550)
-
 # ---------------------------------------------------------
 # TAB 2: 인사이트(InSight) 화성 기상 데이터 시각화
 # ---------------------------------------------------------
