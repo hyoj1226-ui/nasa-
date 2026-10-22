@@ -12,48 +12,16 @@ st.set_page_config(
     layout="wide"
 )
 
-# API 키 설정 (secrets.toml 우선, 없을 경우 제공된 API 키 기본 사용)
+# API 키 설정
 API_KEY = st.secrets.get("NASA_API_KEY", "GQKzD8DdCTg8nppRqGprmCPqNCMbPJphJCd6g8bh")
 
 st.title("🚀 화성 지형 탐사 & 인사이트 기상 관측소")
-st.caption("NASA Open API 및 WMTS 타일 서비스를 활용한 인터랙티브 우주 탐사 앱")
+st.caption("NASA Open API 및 OpenPlanetary 타일 서비스를 활용한 인터랙티브 우주 탐사 앱")
 
 # 탭 구성
 tab1, tab2 = st.tabs(["🌍 행성 지형 탐사 (WMTS)", "🌡️ 화성 기상 관측 (InSight)"])
 
 # ---------------------------------------------------------
-# TAB 1: WMTS 연동 행성 지형 지도
-# ---------------------------------------------------------
-with tab1:
-    st.header("화성 및 달 인터랙티브 지형 지도")
-    st.write("NASA Trek WMTS 타일 레이어를 통해 화성과 달의 고해상도 표면을 탐사할 수 있습니다.")
-    
-    col_select, _ = st.columns([1, 2])
-    with col_select:
-        selected_body = st.selectbox("탐사할 천체를 선택하세요", ["화성 (Mars)", "달 (Moon)"])
-    
-    if selected_body == "화성 (Mars)":
-        tile_url = "https://trek.nasa.gov/tiles/Mars/EQ/Mars_Viking_MDIM21_ClrIndex_global_232m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg"
-        attr = "NASA Trek / JPL"
-        init_location = [0, 0]
-        zoom_start = 2
-    else:
-        tile_url = "https://trek.nasa.gov/tiles/Moon/EQ/LRO_LROC_WAC_Global_100m_June2013/1.0.0/default/default028mm/{z}/{y}/{x}.jpg"
-        attr = "NASA Trek / LROC"
-        init_location = [0, 0]
-        zoom_start = 2
-
-    # Folium 지도 생성
-    m = folium.Map(
-        location=init_location,
-        zoom_start=zoom_start,
-        tiles=tile_url,
-        attr=attr,
-        crs="EPSG3857"
-    )
-
-    # 주요 탐사선 착륙 위치 마커 추가
-    if selected_body =# ---------------------------------------------------------
 # TAB 1: OpenPlanetary 타일 연동 행성 지형 지도
 # ---------------------------------------------------------
 with tab1:
@@ -62,9 +30,12 @@ with tab1:
     
     col_select, _ = st.columns([1, 2])
     with col_select:
-        selected_body = st.selectbox("탐사할 천체를 선택하세요", ["화성 (Mars - Viking Color)", "화성 (Mars - MOLA Elevation)", "달 (Moon)"])
+        selected_body = st.selectbox(
+            "탐사할 천체를 선택하세요", 
+            ["화성 (Mars - Viking Color)", "화성 (Mars - MOLA Elevation)", "달 (Moon)"]
+        )
     
-    # Folium과 100% 호환되는 OpenPlanetary 타일 URL
+    # 선택 항목에 따른 타일 레이어 및 설정 변경
     if "Viking" in selected_body:
         tile_url = "https://s3-eu-west-1.amazonaws.com/whereonmars.cartodb.net/celestia_mars-viking-mosaics/{z}/{x}/{y}.png"
         attr = "OpenPlanetaryMap / NASA Viking Mosaic"
@@ -81,7 +52,7 @@ with tab1:
         init_location = [0, 0]
         zoom_start = 2
 
-    # Folium 지도 생성 (max_zoom=5 로 제한하여 미지원 타일 요청 방지)
+    # Folium 지도 생성
     m = folium.Map(
         location=init_location,
         zoom_start=zoom_start,
@@ -90,7 +61,7 @@ with tab1:
         attr=attr
     )
 
-    # 주요 탐사선 착륙 위치 마커
+    # 화성 선택 시 탐사선 위치 마커 표시
     if "Mars" in selected_body:
         folium.Marker(
             [4.5, 135.6],
@@ -112,6 +83,7 @@ with tab1:
         ).add_to(m)
 
     st_folium(m, width="100%", height=550)
+
 # ---------------------------------------------------------
 # TAB 2: 인사이트(InSight) 화성 기상 데이터 시각화
 # ---------------------------------------------------------
@@ -184,7 +156,7 @@ with tab2:
             st.dataframe(df, use_container_width=True)
             
     else:
-        st.info("💡 InSight API에서 수집된 최근 데이터가 없어 샘플 시각화 데이터로 대체 표시합니다.")
+        st.info("💡 InSight API에서 수집된 최근 실시간 데이터가 제공되지 않아 샘플 데이터로 대체 표시합니다.")
         
         sample_df = pd.DataFrame({
             "Sol (화성일)": ["575", "576", "577", "578", "579"],
